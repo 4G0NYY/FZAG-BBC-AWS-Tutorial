@@ -1,0 +1,6 @@
+version: '3'
+services:
+  discord-bot:
+    build: .
+    container_name: discord_webhook_bot
+    restart: unless-stopped

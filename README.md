@@ -1,6 +1,28 @@
 # FZAG-BBC-AWS-Tutorial
 Die Aufträge, welche ich mit den Bbc-Menschen durchführen werde. In diesen werden wir: Einen Linux-Server in AWS (Localstack) mithilfe eines cloud-init.yml erstellen (EC2), auf dieser Instanz Docker installieren, innerhalb von Docker Portainer einrichten sowie ein Python-Skript schreiben, welches wir dann mit Docker-Compose ausführen (Portainer)
 
+# Was ihr lernen werdet:
+
+ - Basics vom APT Package Manager
+ - Interaktion mit der Bash-Shell
+ - Installieren von Localstack
+ - Basics der AWS-CLI Interaktionen
+ - AWS-SSH Keypair erstellen
+ - AWS Firewall konfigurieren
+ - EC2-Instanz aufsetzen
+ - Docker in der EC2 Instanz aufsetzen
+ - Schreiben eines Docker-Compose Files
+ - Erstellen eines eigenen Docker-Images
+ - Aufsetzen von Portainer
+ - Basics von Portainer
+ - Python-Skripting mit Webhook-Integration
+ - Containerizen dieses Python-Skripts
+ - Erstellen eines cloud-init.yml Files
+
+## Kompetenznachweise:
+Gibt es nicht, wir sind nicht in der Schule ;)
+
+
 # Localstack aufsetzen
 
 Als erstes müssen wir logischerweise mal eine "eigene" AWS-Cloud aufsetzen. Das können wir mithilfe von [Localstack](https://github.com/localstack/localstack).
@@ -183,3 +205,78 @@ Hier setzen wir die Berechtigungen für den key sodass nur der Besitzer (euer Be
 
 ## Firewall-Rules setzen
 
+Da wir einige Netzwerk-Ports brauchen werden, müssen wir ein paar Firewall-Rules erstellen.
+Dies machen wir ebenfalls über die awslocal (Localstack) CLI.
+
+Generell ist der SSH-Port 22 freigeschaltet, da eine "unzugreifbare" EC2-Instanz recht unnütz wäre. Somit müssen wir diesen Port nicht freischalten.
+
+Fangen wir mit den Ports für unser Portainer an:
+```
+awslocal ec2 authorize-security-group-ingress --group-id default --protocol all --port 8000 --cidr 0.0.0.0/0
+```
+```
+awslocal ec2 authorize-security-group-ingress --group-id default --protocol tcp --port 9443 --cidr 0.0.0.0/0
+```
+
+Nun haben wir den Port 8000 für alle Protokolle freigeschaltet und den Port 9443 (zukünftiges Portainer WebUI) für TCP. (HTTPS nutzt TCP)
+
+Jetzt haben wir zwar die Security Group erstellt, jedoch kennen wir die ID der Security Group (Firewall) noch nicht. Diese ID können wir mit folgendem Befehl herausfinden:
+
+```
+sg_id=$(awslocal ec2 describe-security-groups | jq -r '.SecurityGroups[0].GroupId')
+echo $sg_id
+```
+
+Nun können wir unsere erste AWS EC2-Instanz starten!
+
+## EC2-Instanz starten
+
+Nun haben wir fast alles vorbereitet, dass wir unsere EC2-Instanz starten können. Was jedoch noch fehlt ist ein cloud-init.yml File. Dieses ist zwar nicht unbedingt benötigt, jedoch können wir beispielsweise die Installation von Docker und das erstellen unserer Benutzer automatisieren. Ein Beispiel findet ihr hier: [cloud-init.yml](./cloud-init.yml).
+
+Gerne könnt ihr es anpassen, den Benutzernamen ändern, Pakete hinzufügen welche installiert werden sollen und so weiter und so fort.
+
+Sobald ihr euer cloud-init.yml File nach belieben angepasst habt, speichert es in das Home-Verzeichnis eures Servers (Oder wo auch immer sonst ihr den untenstehenden Befehl ausführen wollt)
+
+Nun starten wir unsere lokale EC2-Instanz:
+
+```
+awslocal ec2 run-instances --image-id ami-ff0fea8310f3 --count 1 --instance-type t3.nano --key-name bbc-key --security-group-ids $sg_id --user-data ./cloud-init.yml
+```
+
+Sofern es jetzt keine Errors gab, habt ihr eine EC2-Instanz mithilfe eines Cloud-init.yml Files aufgesetzt!
+
+## Bei der EC2-Instanz einloggen
+
+Einloggen können wir uns über SSH von eurem Ubuntu-Server.
+Wenn ihr den Benutzernamen im Cloud-Init.yml nicht angepasst habt, ist das der Befehl dazu:
+```
+ssh ubuntu@[EURE_IP] -i bbc-key
+```
+
+Nun solltet ihr auf eurer EC2-Instanz angemeldet sein. Dank dem cloud-init.yml Files müsst ihr auch bei sudo-Befehlen kein Passwort eingeben. 
+Was jedoch sein kann ist dass ihr bei der -i Option den genauen Pfad zu eurem Private Key spezifizieren müsst. Das könnte Beispielsweise so aussehen:
+```
+ssh ubuntu@[EURE_IP] -i /home/ramon/bbc-key.pem
+```
+
+# Portainer installieren
+
+Nun habt ihr SSH-Zugriff auf eure EC2-Instanz. Um nun Portainer zu installieren reicht ein einziger Befehl:
+```
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:lts
+```
+
+Hiermit installieren wir Portainer und mappen die korrekten Ports. Da unser Ubuntu-Server keine grafische Oberfläche hat, können wir einfach eine andere VM in's selbe Netzwerk tun und dort im Browser https://IP_EURES_UBUNTU_SERVERS:9443 öffnen, dort können wir dann Portainer bequem mit "Klicki-Bunti" (WebUI) konfigurieren.
+
+# Python-Skript schreiben
+
+Was genau für ein Python-Skript ihr schreibt ist für diese Aufgabe relativ egal. Falls ihr keine Lust auf Python habt oder die Zeit nicht reicht (oder einfach "Inspiration" haben möchtet ;) habe ich euch ein Beispielsskript gebastelt. Dies findet ihr hier: [webhook.py](./webhook.py)
+
+# Docker Image erstellen
+
+Jedes Programm, welches in Docker läuft, braucht ein Dockerimage. Dieses Image ist wie eine Art "Template", mit welchem dann mithilfe von Docker-Compose oder Docker run Container erstellt werden können. Je nach dem was für ein Python-Skript ihr bastelt wird dieses File variieren. Wenn ihr mein Python-Skript verwendet könnt ihr auch mein Dockerfile nutzen: [Dockerfile](./Dockerfile)
+
+Um das ganze nun zu "bauen" können wir das Dockerfile zusammen mit [webhook.py](./webhook.py) und [requirements.txt](./requirements.txt) in einen Ordner auf unserem ubuntu-Server tun und dann den folgenden Befehl ausführen:
+```
+docker build -t .
+```
