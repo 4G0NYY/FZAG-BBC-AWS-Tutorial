@@ -276,7 +276,37 @@ Was genau für ein Python-Skript ihr schreibt ist für diese Aufgabe relativ ega
 
 Jedes Programm, welches in Docker läuft, braucht ein Dockerimage. Dieses Image ist wie eine Art "Template", mit welchem dann mithilfe von Docker-Compose oder Docker run Container erstellt werden können. Je nach dem was für ein Python-Skript ihr bastelt wird dieses File variieren. Wenn ihr mein Python-Skript verwendet könnt ihr auch mein Dockerfile nutzen: [Dockerfile](./Dockerfile)
 
+Nun haben wir zwei Optionen: Das Image manuell bauen oder direkt mit Docker Compose. Wie ihr das macht ist euch überlassen.
+
+## Manuell
+
 Um das ganze nun zu "bauen" können wir das Dockerfile zusammen mit [webhook.py](./webhook.py) und [requirements.txt](./requirements.txt) in einen Ordner auf unserem ubuntu-Server tun und dann den folgenden Befehl ausführen:
 ```
-docker build -t .
+docker build .
 ```
+
+Jetzt haben wir lokal ein Image von unserem Skript und den Abhängigkeiten. Um das Image zu nutzen, brauchen wir jedoch den Namen des Images. Diesen finden wir wie folgt heraus:
+```
+docker images
+```
+
+Dort sehen wir dann alle lokal verfügbaren Images. In eurem Fall wird das genau eins sein. Von dem könnt ihr nun die ID kopieren und in [dieses Docker-Compose](./docker-compose-m.yml) file einfügen. 
+
+## Automatisch
+
+Wenn ihr das Image nicht manuell mit docker build bauen wollt, könnt ihr auch einfach den Pfad zu eurem Dockerfile (in einem Ordner in welchem auch [webhook.py](./webhook.py) und [requirements.txt](./requirements.txt) sind) einfügen. Dies würdet ihr in [diesem Docker-Compose](./docker-compose-a.yml) machen.
+
+# Portainer nutzen
+
+Nun haben wir alle Abhängigkeiten, sodass wir unser containerizedes Skript über Portainer deployen können. Geht zurück zu eurem Portainer und meldet euch mit den Daten, welche ihr beim einrichten von Portainer gewählt habt, an. Dort klickt ihr auf die **lokale Umgebung** und dort auf **Stacks**.
+
+Nun könnt ihr auf **Add Stack** klicken. 
+
+In diesem Menü müsst ihr euer Docker-Compose.yml File (den Inhalt) einfügen.
+
+Das ganze könnte dann so ungefähr so aussehen:
+![Portainer](./images/Portainer.png)
+
+Nun könnt ihr unten auf **Deploy the stack** klicken. 
+
+Wenn das ganze ohne Fehlermeldungen verläuft und eure Webhook dann eine Message sendet habt ihr diese kleine Einführung erfolgreich abgeschlossen :)
