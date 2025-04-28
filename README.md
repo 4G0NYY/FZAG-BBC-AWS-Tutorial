@@ -159,7 +159,27 @@ Hier definieren wir, welches Docker Image unser Container nutzen wird.
 
 Localstack können wir mit einem einzigen Befehl starten:
 ```
-
+localstack start
 ```
 
+Nun sollten wir das Localstack-Logo in ASCII-Art sowie einige Informationen sehen. Wenn das korrekt ist und keine Fehlermeldungen auftreten, sind wir schonmal gut.
+
 ## EC2-Keypair erstellen
+
+Um auf eine EC2-Instanz zuzugreifen müssen wir ein SSH-Keypair erstellen. Dies können (und müssen) wir mit Localstack. Das geht wie folgt:
+
+```
+awslocal ec2 create-key-pair --key-name bbc-key --query 'KeyMaterial' --output text | tee key.pem
+```
+
+Jetzt haben wir das Keypair "bbc-key" erstellt und den PRIVATE Key (Wisst ihr was der Unterschied zwischen Private und Public Key ist?) in der Datei "key.pem" im momentanen Verzeichnis gespeichert. Was jedoch ein Stolperstein ist: Private Keys MÜSSEN minimale Dateisystem-Berechtigungen haben, sonst verweigert SSH diese. Die momentanen Berechtigungen sind zu "offen", somit müssen wir diese anpassen:
+
+```
+sudo chmod 400 key.pem
+```
+
+Hier setzen wir die Berechtigungen für den key sodass nur der Besitzer (euer Benutzer) schreibgeschützte Berechtigungen darauf hat. 
+
+
+## Firewall-Rules setzen
+
