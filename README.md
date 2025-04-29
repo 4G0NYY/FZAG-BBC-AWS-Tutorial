@@ -308,21 +308,20 @@ Sofern es jetzt keine Errors gab, habt ihr eine EC2-Instanz mithilfe eines Cloud
 
 ## Bei der EC2-Instanz einloggen
 
-Einloggen können wir uns über SSH von eurem Ubuntu-Server.
-Wenn ihr den Benutzernamen im Cloud-Init.yml nicht angepasst habt, ist das der Befehl dazu:
-```
-ssh ubuntu@[EURE_IP] -i bbc-key
-```
+Jetzt kommt das traurige an diesem Auftrag: Localstack kann nur die API-Responses von AWS emulieren, leider kann es keine wirklichen VMs erstellen. Somit können wir NICHT auf die EC2-Instanz zugreifen (Weil es keine gibt)
 
-Nun solltet ihr auf eurer EC2-Instanz angemeldet sein. Dank dem cloud-init.yml Files müsst ihr auch bei sudo-Befehlen kein Passwort eingeben. 
-Was jedoch sein kann ist dass ihr bei der -i Option den genauen Pfad zu eurem Private Key spezifizieren müsst. Das könnte Beispielsweise so aussehen:
-```
-ssh ubuntu@[EURE_IP] -i /home/ramon/bbc-key.pem
-```
+Jedoch habt ihr jetzt das Wissen, wie ihr in der AWS-CLI:
+ - Securitygroups erstellt
+ - EC2-Instanzen erstellt
+ - Cloud-init.yml Files erstellt
+ - Screen auf Linux nutzt
+ - SSH-Keys in AWS erstellt
+
+Und das was wichtig ist: Ihr wisst wie man das ganze in der CLI macht, nicht nur wie man das im WebUI macht. Somit seid ihr wahrscheinlich besser als 70% der AWS-Nutzer :)
 
 # Portainer installieren
 
-Nun habt ihr SSH-Zugriff auf eure EC2-Instanz. Um nun Portainer zu installieren reicht ein einziger Befehl:
+Da wir keine EC2-Instanz haben, nutzen wir jetzt einfach unser Ubuntu-Server mit Portainer (tun wir einfach so als wäre der in AWS...). Um nun Portainer zu installieren reicht ein einziger Befehl:
 ```
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:lts
 ```
