@@ -181,7 +181,7 @@ Hier definieren wir, welches Docker Image unser Container nutzen wird.
 
 Localstack können wir mit einem einzigen Befehl starten:
 ```
-localstack start
+sudo localstack start
 ```
 
 Nun sollten wir das Localstack-Logo in ASCII-Art sowie einige Informationen sehen. Wenn das korrekt ist und keine Fehlermeldungen auftreten, sind wir schonmal gut.
