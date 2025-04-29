@@ -199,16 +199,10 @@ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 So, jetzt haben wir aws-cli installiert. Bleibt bloss noch aws-cli-local. Dies haben wir jedoch mit einem Befehl (zuzüglich einem Befehl zum aktualisieren unserer PATH-Variablen) erledigt.
 
 ```
-pipx install awscli-local
+pip install awscli-local --break-system-packages
 ```
 
-Wenn hier kein Error erscheint, können wir noch unsere PATH-Variable aktualisieren lassen:
-```
-pipx ensurepath
-```
-
-So! Jetzt haben wir aws-cli und aws-cli-local installiert.
-
+Wenn hier kein Error erscheint, war es ein Erfolg.
 
 # EC2-Instanz innerhalb von Localstack aufsetzen.
 
