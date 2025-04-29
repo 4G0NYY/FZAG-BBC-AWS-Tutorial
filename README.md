@@ -109,9 +109,9 @@ sudo usermod -aG docker $USER
 Und nun fügen wir den momentanen Benutzer (in der ENV-Variable $USER) in die Docker-Gruppe. Durch diese Variable könnt ihr auch diesen Befehl Copy-Pasten.
 
 ## Localstack installieren
-Localstack können wir mit einem einzigen Befehl installieren: [Zumindest wenn wir Localstack in Docker nutzen würden.]
+Localstack können wir relativ einfach installieren. Ebenfalls gibt es zwei verschiedene Wege um Localstack zu installieren, entweder können wir Docker verwenden oder eine Bare-Metal installation. Wie genau ihr das angeht ist euch überlassen :)
 
-### Bare-Metal: (Unser Weg)
+### Bare-Metal:
 
 ```
 curl --output localstack-cli-4.3.0-linux-amd64-onefile.tar.gz --location https://github.com/localstack/localstack-cli/releases/download/v4.3.0/localstack-cli-4.3.0-linux-amd64-onefile.tar.gz
@@ -128,9 +128,10 @@ Um das ganze zu testen, können wir folgenden Befehl verwenden:
 localstack --version
 ```
 
-Wenn wir hier einen Output erhalten, war die Installation erfolgreich. Danach geht's weiter mit dem Aufsetzen einer EC2-Instanz.
+Wenn wir hier einen Output erhalten, war die Installation erfolgreich. 
+Nun geht's (fast) weiter mit dem Aufsetzen einer EC2-Instanz.
 
-### In Docker: (machen wir nicht)
+### In Docker:
 ```
 docker run --rm -it -p 4566:4566 -p 4510-4559:4510-4559 -v /var/run/docker.sock:/var/run/docker.sock localstack/localstack
 ```
@@ -167,6 +168,47 @@ localstack/localstack
 ```
 Hier definieren wir, welches Docker Image unser Container nutzen wird.
 
+## AWS-CLI & AWS-CLI-local installieren
+
+Um Localstack ohne permanente HTTP-API-Calls nutzen zu können brauchen wir jedoch noch aws-cli sowie aws-cli-local. Also installieren wir das ganze jetzt.
+
+### AWS-CLI
+Eine der Abhängigkeiten von AWS-CLI ist unzip. Für AWS-CLI-local benötigen wir ebenfalls pipx. Also installieren wir als erstes diese beiden Abhängigkeiten.
+```
+sudo apt install unzip pipx -y
+```
+
+So, jetzt können wir AWS-CLI installieren.
+
+```
+curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+```
+
+Als erstes laden wir den gezippten Installer herunter.
+Diese müssen wir jetzt unzippen.
+
+```
+unzip awscli-bundle.zip
+```
+
+Nun können wir den Installer ausführen.
+```
+sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+```
+
+So, jetzt haben wir aws-cli installiert. Bleibt bloss noch aws-cli-local. Dies haben wir jedoch mit einem Befehl (zuzüglich einem Befehl zum aktualisieren unserer PATH-Variablen) erledigt.
+
+```
+pipx install awscli-local
+```
+
+Wenn hier kein Error erscheint, können wir noch unsere PATH-Variable aktualisieren lassen:
+```
+pipx ensurepath
+```
+
+So! Jetzt haben wir aws-cli und aws-cli-local installiert.
+
 
 # EC2-Instanz innerhalb von Localstack aufsetzen.
 
@@ -179,12 +221,37 @@ Hier definieren wir, welches Docker Image unser Container nutzen wird.
 
 ## Localstack starten
 
-Localstack können wir mit einem einzigen Befehl starten:
+### Bare-Metal Installation
+
+```
+screen
+```
+
+Hiermit machen wir eine "virtuelle" zweite Shell, sodass wir trotzdem noch mit unserem Server interagieren können.
+
 ```
 sudo localstack start
 ```
+Nun sollten wir das Localstack-Logo in ASCII-Art sowie einige Informationen sehen. Wenn das korrekt ist und keine Fehlermeldungen auftreten, sind wir schonmal gut.
+
+Um wieder aus dem screen herauszukommen, klickt **CTRL + A** und danach **D**
+
+
+### Docker Installation
+Wenn ihr euch für den Docker-Weg entschieden habt sieht das starten etwas anders aus:
+
+```
+screen
+```
+
+```
+docker run --rm -it -p 4566:4566 -p 4510-4559:4510-4559 -v /var/run/docker.sock:/var/run/docker.sock localstack/localstack
+```
 
 Nun sollten wir das Localstack-Logo in ASCII-Art sowie einige Informationen sehen. Wenn das korrekt ist und keine Fehlermeldungen auftreten, sind wir schonmal gut.
+
+Um wieder aus dem screen herauszukommen, klickt **CTRL + A** und danach **D**
+
 
 ## EC2-Keypair erstellen
 
