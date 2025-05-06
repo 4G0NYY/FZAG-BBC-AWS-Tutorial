@@ -146,7 +146,7 @@ Hiermit erstellen & starten wir einen neuen Docker Container
 ```
 --rm
 ```
-Dieser Teil löscht den Befehl automatisch sobald er gestoppt wird, sodass keine unnötigen Container "liegen" bleiben. (Den Container welchen wir händisch starten startet die "echten" Container)
+Dieser Teil löscht den Container automatisch sobald er gestoppt wird, sodass keine unnötigen Container "liegen" bleiben. (Den Container welchen wir händisch starten startet die "echten" Container)
 
 ```
 -it
